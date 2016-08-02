@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 2016/5/28 ?W?? 12:05:06 by Hibernate Tools 4.3.1.Final -->
+<hibernate-mapping>
+    <class name="per.qoq.scrap.jobsdb.hibernate.SavedJobs" table="saved_jobs" catalog="scrap_jobs" optimistic-lock="version">
+        <id name="id" type="java.lang.Integer">
+            <column name="id" />
+            <generator class="identity" />
+        </id>
+        <property name="userId" type="string">
+            <column name="user_id" length="100" />
+        </property>
+        <property name="title" type="string">
+            <column name="title" length="100" not-null="true" />
+        </property>
+        <property name="company" type="string">
+            <column name="company" length="100" not-null="true" />
+        </property>
+        <property name="jobDesc" type="string">
+            <column name="job_desc" />
+        </property>
+        <property name="saved" type="string">
+            <column name="saved" length="1" />
+        </property>
+        <property name="savedTime" type="timestamp">
+            <column name="saved_time" length="19" />
+        </property>
+        <property name="jobId" type="string">
+            <column name="job_id" length="45" />
+        </property>
+    </class>
+</hibernate-mapping>

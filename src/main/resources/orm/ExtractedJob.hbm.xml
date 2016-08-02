@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 2016/4/12 ?W?? 03:28:55 by Hibernate Tools 4.3.1.Final -->
+<hibernate-mapping>
+    <class name="per.qoq.scrap.jobsdb.hibernate.ExtractedJob" table="extracted_job" catalog="scrap_jobs" optimistic-lock="version">
+        <id name="jobId" type="java.lang.Integer">
+            <column name="job_id" />
+            <generator class="identity" />
+        </id>
+        <property name="companyName" type="string">
+            <column name="company_name" length="100" />
+        </property>
+        <property name="jobTitle" type="string">
+            <column name="job_title" length="200" />
+        </property>
+        <property name="datePosted" type="timestamp">
+            <column name="date_posted" length="19" />
+        </property>
+        <property name="jobCate" type="string">
+            <column name="job_cate" length="100" />
+        </property>
+        <property name="url" type="string">
+            <column name="url" length="200" />
+        </property>
+        <property name="jobDesc" type="string">
+            <column name="job_desc" />
+        </property>
+        <property name="experience" type="string">
+            <column name="experience" length="200" />
+        </property>
+    </class>
+</hibernate-mapping>
