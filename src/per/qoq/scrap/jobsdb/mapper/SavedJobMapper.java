@@ -16,7 +16,6 @@ public class SavedJobMapper implements RowMapper<SavedJob>{
 		sj.setUserId(rs.getString("user_id"));
 		sj.setTitle(rs.getString("title"));
 		sj.setCompany(rs.getString("company"));
-		sj.setJobDesc(rs.getString("job_desc"));
 		sj.setSavedTime(rs.getDate("saved_time"));
 		sj.setSaved(rs.getString("saved"));
 		sj.setJobId(rs.getString("job_id"));

@@ -18,6 +18,8 @@ public class Job {
 	private String jobTtile;
 	private String jobDesc;
 	private String objId;
+	private int jobId;
+	
 	private String url;
 	private int sequence;
 	private boolean saved;
@@ -97,6 +99,11 @@ public class Job {
 	public void setManyJobs(boolean manyJobs) {
 		this.manyJobs = manyJobs;
 	}
-
+	public int getJobId() {
+		return jobId;
+	}
+	public void setJobId(int jobId) {
+		this.jobId = jobId;
+	}
 
 }

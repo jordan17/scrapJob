@@ -62,6 +62,7 @@ public class Utils {
 			    getCompanySum(message);
 			    getHatedJob(message);
 	}
+	
 	static void getCompanySum(List<Job> message) {
 		ApplicationContext context = 
 	             new ClassPathXmlApplicationContext("Beans.xml");
@@ -81,6 +82,27 @@ public class Utils {
 			    	}
 			    }
 	}
+	
+	static void getSkillTag(List<Job> message) {
+		ApplicationContext context = 
+	             new ClassPathXmlApplicationContext("Beans.xml");
+
+		CompanySumJDBCTemplate studentJDBCTemplate = 
+			      (CompanySumJDBCTemplate)context.getBean("CompanySumJDBCTemplate");
+			    List<CompanySumId> sjs = studentJDBCTemplate.getSavedJob();
+			    Map<String,Integer> map = new HashMap<String,Integer>();
+			    for(CompanySumId cs:sjs) {
+			    	if(cs.getSum().intValue() >=10)
+			    		map.put(cs.getCompanyName(),cs.getSum().intValue());
+			    }
+			    for(Job job:message) {
+			    	if(map.get(job.getCompany())!=null) {
+			    		//job.setCompany("<span style='color:red'>"+job.getCompany()+"</span>");
+			    		job.setManyJobs(true);
+			    	}
+			    }
+	}
+	
 	static void getHatedJob(List<Job> message) {
 		ApplicationContext context = 
 	             new ClassPathXmlApplicationContext("Beans.xml");
@@ -115,4 +137,5 @@ public class Utils {
 			    	}
 			    }
 	}
+	
 }

@@ -3,7 +3,7 @@
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
-
+<%@page import="per.qoq.scrap.jobsdb.enu.AgentEnum" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -15,15 +15,17 @@
   .overflow { height: 200px; }
   .company-list {height:300px;}
   #cpyTable {width : 50%;}
+  .checkBoxes {display:inline-block;}
+  .select {background-color:#AAAAAA;}
   </style>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 <script type="text/javascript" src="https://cdn.datatables.net/u/dt/dt-1.10.12/datatables.min.js"></script>
 <script type="text/javascript" >
 	var jobTable;
-	
+	var dateTable_option = {paging:true,autoWidth:true,pageLength:100,lengthChange:true};
 	$(document).ready(function(){
-		jobTable=$('#jobTable').dataTable({paging:true,autoWidth:true,pageLength:100});
+		jobTable=$('#jobTable').dataTable(dateTable_option);
 		$('#cpyTable').dataTable({paging:true});
 		$('#dateBefore').datepicker();
 		$('#dateAfter').datepicker();
@@ -105,14 +107,27 @@ function deleteHateJob(jj,ref) {
 						$(this).remove();
 					}
 				});
-			 jobTable.dataTable({paging:true});
+			 jobTable.dataTable(dateTable_option);
 	}
 </script>
 </head>
 <body>
+<div id="head"><jsp:include page="menu.jsp"></jsp:include></div>
 <form action="${pageContext.request.contextPath}/service/filterByDate" method="post" >
 	<input type="text" name="dateAfter" id="dateAfter"/> <input type="text" name="dateBefore" id="dateBefore"/>
 	<input type="submit" value="filter" />
+</form>
+<form action="${pageContext.request.contextPath}/service/filterAgent" method="post">
+	<input type="checkbox" name="true_False" class="checkBoxes" value="true">Filter agent</input>
+	<input type="submit"value="Submit"/>
+</form>
+<form method="post" action="${pageContext.request.contextPath}/service/filterBySkill">
+	<span name="skills" class="select">
+	<c:forEach var="skill" items="${skillList}">
+		<input type="checkbox" name="skill" class="checkBoxes" value="${skill}">${skill}</input>
+	</c:forEach>
+	<input type="submit"value="Submit"/>
+	</span>
 </form>
 		<table id="jobTable" class="display" cellspacing="0">
 			<thead>
@@ -130,16 +145,16 @@ function deleteHateJob(jj,ref) {
 			<c:forEach var="job" items="${jobList}">
 				<tr>
 					<td><c:if test="${job.saved==true}">
-					<span class="ui-icon ui-icon-star" onclick="deleteSavedJob('${job.objId}',$(this));"/>
+					<span class="ui-icon ui-icon-star" onclick="deleteSavedJob('${job.jobId}',$(this));"/>
 					</c:if>
 					<c:if test="${job.saved==false}">
-					<span class="ui-icon ui-icon-plus" onclick="saveJob('${job.objId}',$(this));"/>
+					<span class="ui-icon ui-icon-plus" onclick="saveJob('${job.jobId}',$(this));"/>
 					</c:if></td>
 					<td><c:if test="${job.hated==true}">
-					<span class="ui-icon ui-icon-star" onclick="deleteHateJob('${job.objId}',$(this));"/>
+					<span class="ui-icon ui-icon-star" onclick="deleteHateJob('${job.jobId}',$(this));"/>
 					</c:if>
 					<c:if test="${job.hated==false}">
-					<span class="ui-icon ui-icon-plus" onclick="hateJob('${job.objId}',$(this));"/>
+					<span class="ui-icon ui-icon-plus" onclick="hateJob('${job.jobId}',$(this));"/>
 					</c:if></td>
 					<td><div onclick="$('#content-${count}').dialog({width:'80%',closeOnEscape:true}).show()">
 					<span style="${job.saved==true?'color:red;':''}${job.hated==true?'color:blue;':''}">${job.jobTtile}</span>

@@ -1,24 +1,30 @@
 package per.qoq.scrap.jobsdb.controller;
 
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.View;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,6 +44,9 @@ import per.qoq.scrap.jobsdb.dao.SavedJobDAOImpl;
 import per.qoq.scrap.jobsdb.entity.HateJob;
 import per.qoq.scrap.jobsdb.entity.Job;
 import per.qoq.scrap.jobsdb.entity.SavedJob;
+import per.qoq.scrap.jobsdb.enu.AgentEnum;
+import per.qoq.scrap.jobsdb.helper.CompanySumJDBCTemplate;
+import per.qoq.scrap.jobsdb.helper.ExtractJobJdbcTemplate;
 import per.qoq.scrap.jobsdb.helper.JobListAnalyser;
 import per.qoq.scrap.jobsdb.helper.MongoDbConnecter;
 import per.qoq.scrap.jobsdb.helper.SavedJobJDBCTemplate;
@@ -45,6 +55,7 @@ import per.qoq.scrap.jobsdb.model.FilterCompany;
 
 @Controller
 @RequestMapping(value="/service")
+@Scope("session")
 @SessionAttributes("jobList")
 public class WebServiceController {
 	
@@ -54,6 +65,11 @@ public class WebServiceController {
 	private HateJobDAO hateJobDao;
 	
 	static Logger log = Logger.getLogger(WebServiceController.class.getName());
+	
+	@ModelAttribute("skillList")
+	public List<String> getSkillList() {
+		return AgentEnum.getSkills();
+	}
 	
 	@RequestMapping(value = "/filterCompany" ,method=RequestMethod.POST)
 	public ModelAndView filterCompany(@ModelAttribute("filterCompany") FilterCompany user,Model model) {
@@ -117,26 +133,119 @@ public class WebServiceController {
 	
 
 	@RequestMapping(value = "/filterByDate" ,method=RequestMethod.POST)
-	public ModelAndView filterByDate(@RequestParam String dateAfter,@RequestParam String dateBefore,Model model) throws ParseException {
+	public ModelAndView filterByDate(@RequestParam String dateAfter,@RequestParam String dateBefore,ModelMap map) throws ParseException {
 		
 		SimpleDateFormat simple = new SimpleDateFormat("MM/dd/yyyy",Locale.ENGLISH);
-		Map<String,Object> map = model.asMap();
-		List<Job> message =  MongoDbConnecter.filterByDate(simple.parse(dateBefore),simple.parse(dateAfter));
+		//SimpleDateFormat simple = new SimpleDateFormat("yyyyMMDD",Locale.ENGLISH);
+		//Map<String,Object> map = model.asMap();
+		//List<Job> message =  MongoDbConnecter.filterByDate(simple.parse(dateBefore),simple.parse(dateAfter));
+		
+		ApplicationContext context = 
+	             new ClassPathXmlApplicationContext("Beans.xml");
+
+	    ExtractJobJdbcTemplate studentJDBCTemplate = 
+	      (ExtractJobJdbcTemplate)context.getBean("extractedJobJDBCTemplate");
+	    Timestamp db = new Timestamp(simple.parse(dateBefore).getTime());
+	    Timestamp da = new Timestamp(simple.parse(dateAfter).getTime());
+	    List<Job> message = studentJDBCTemplate.filterByDate(simple.parse(dateBefore),simple.parse(dateAfter));
 		Utils.getSavedJob(message);
+		
 		ModelAndView view = new ModelAndView("/test1");
 		FilterCompany form = new FilterCompany();
-		view.addObject("jobList",message);
+		//view.addObject("jobList",message);
+		
+		Map<String,Integer> companyCount = JobListAnalyser.getCompanyCount(message);
+		Set<String> companys = new TreeSet<String>(companyCount.keySet());
+		//view.addObject("companyList",companys);
+		map.addAttribute("companyList",companys);
+		map.addAttribute("jobList", message);
+		//view.addObject("filterCompany", form);
+		//map.addAttribute("filterCompany", form);
+		//view.addObject("companyCount",companyCount);
+		map.addAttribute("companyCount",companyCount);
+		view.addAllObjects(map);
+		return view;
+	}
+	
+	@RequestMapping(value = "/filterBySkill" ,method=RequestMethod.POST)
+	public ModelAndView filterBySkill(@RequestParam String skill,Model model) throws ParseException {
+		
+		
+		String[] skills = skill.split(",");
+		ApplicationContext context = 
+	             new ClassPathXmlApplicationContext("Beans.xml");
+
+		CompanySumJDBCTemplate studentJDBCTemplate = 
+	      (CompanySumJDBCTemplate)context.getBean("CompanySumJDBCTemplate");
+		
+		Map<String,Object> map = model.asMap();
+		List<Job> message =null;
+		
+		if(map.get("jobList")!=null) {
+			message = (List<Job>) map.get("jobList");
+		}
+		else {
+			 message =MongoDbConnecter.getTestDB();
+		}
+		Map<Integer,Job> jobMap = new HashMap<Integer,Job>();
+		List<Integer>	ids = new ArrayList<Integer>();
+		for(Job job:message) {
+			ids.add(job.getJobId());
+			jobMap.put(job.getJobId(), job);
+		}
+		List<Integer> resultIds = studentJDBCTemplate.getSkillJob(ids, skills);
+		List<Job> resultJobs = resultIds.stream().map(id -> jobMap.get(id)).collect(Collectors.toList());
+		Utils.getSavedJob(resultJobs);
+		ModelAndView view = new ModelAndView("/test1");
+		FilterCompany form = new FilterCompany();
+		view.addObject("jobList",resultJobs);
 		Map<String,Integer> companyCount = JobListAnalyser.getCompanyCount(message);
 		Set<String> companys = new TreeSet<String>(companyCount.keySet());
 		view.addObject("companyList",companys);
-		model.addAttribute("jobList", message);
+		model.addAttribute("jobList", resultJobs);
 		view.addObject("filterCompany", form);
 		view.addObject("companyCount",companyCount);
 		return view;
 	}
 	
+	@RequestMapping(value = "/filterAgent" ,method=RequestMethod.POST)
+	public ModelAndView filterAgent(@RequestParam String true_False,Model model) throws ParseException {
+		
+		boolean filter = false;
+		ApplicationContext context = 
+	             new ClassPathXmlApplicationContext("Beans.xml");
+
+		CompanySumJDBCTemplate studentJDBCTemplate = 
+	      (CompanySumJDBCTemplate)context.getBean("CompanySumJDBCTemplate");
+		
+		if(true_False.equalsIgnoreCase("True")) filter = true;
+		
+		Map<String,Object> map = model.asMap();
+		List<Job> message =null;
+		
+		if(map.get("jobList")!=null) {
+			message = (List<Job>) map.get("jobList");
+		}
+		else {
+			 message =MongoDbConnecter.getTestDB();
+		}
+		List<String> agentNames = studentJDBCTemplate.getAgentName();
+		Set<String> agentSet = agentNames.stream().collect(Collectors.toSet());
+		List<Job> resultJobs = message.stream().filter(job -> !agentSet.contains(job.getCompany()) ).collect(Collectors.toList());
+		Utils.getSavedJob(resultJobs);
+		ModelAndView view = new ModelAndView("/test1");
+		FilterCompany form = new FilterCompany();
+		view.addObject("jobList",resultJobs);
+		Map<String,Integer> companyCount = JobListAnalyser.getCompanyCount(message);
+		Set<String> companys = new TreeSet<String>(companyCount.keySet());
+		view.addObject("companyList",companys);
+		model.addAttribute("jobList", resultJobs);
+		view.addObject("filterCompany", form);
+		view.addObject("companyCount",companyCount);
+		return view;
+	}
 	@RequestMapping(value = "/saveJob" ,method=RequestMethod.POST)
-	public @ResponseBody String saveJob(@RequestParam("objId") String objId,Model model) throws ParseException {
+	public @ResponseBody String saveJob(@RequestParam("objId") Integer objId,Model model) throws ParseException {
 		ApplicationContext context = 
 	             new ClassPathXmlApplicationContext("Beans.xml");
 
@@ -145,7 +254,7 @@ public class WebServiceController {
 		Map<String,Object> map = model.asMap();
 		List<Job> jobs = (List<Job>) map.get("jobList");
 		for(Job job:jobs) {
-			if(job.getObjId().equals(objId)) {
+			if(job.getJobId()== objId) {
 				studentJDBCTemplate.addSavedJob(job);
 				
 				break;
@@ -157,7 +266,7 @@ public class WebServiceController {
 	
 	@RequestMapping(value = "/deleteSaveJob" ,method=RequestMethod.POST)
 	@ResponseBody
-	public String deleteJob(@RequestParam String objId,Model model) throws ParseException {
+	public String deleteJob(@RequestParam Integer objId,Model model) throws ParseException {
 		ApplicationContext context = 
 	             new ClassPathXmlApplicationContext("Beans.xml");
 
@@ -166,7 +275,7 @@ public class WebServiceController {
 		Map<String,Object> map = model.asMap();
 		List<Job> jobs = (List<Job>) map.get("jobList");
 		for(Job job:jobs) {
-			if(job.getObjId().equals(objId)) {
+			if(job.getJobId() == objId) {
 				studentJDBCTemplate.deleteSavedJob(job);
 			}
 		}
@@ -183,7 +292,7 @@ public class WebServiceController {
 	}
 	
 	@RequestMapping(value = "/hateJob" ,method=RequestMethod.POST)
-	public @ResponseBody String hateJob(@RequestParam("objId") String objId,Model model) throws ParseException {
+	public @ResponseBody String hateJob(@RequestParam("objId") Integer objId,Model model) throws ParseException {
 		ApplicationContext context = 
 	             new ClassPathXmlApplicationContext("Beans.xml");
 
@@ -192,7 +301,7 @@ public class WebServiceController {
 		Map<String,Object> map = model.asMap();
 		List<Job> jobs = (List<Job>) map.get("jobList");
 		for(Job job:jobs) {
-			if(job.getObjId().equals(objId)) {
+			if(job.getJobId() == objId) {
 				studentJDBCTemplate.addHatedJob(job);
 				break;
 			}
@@ -203,7 +312,7 @@ public class WebServiceController {
 	
 	@RequestMapping(value = "/deleteHateJob" ,method=RequestMethod.POST)
 	@ResponseBody
-	public String deleteHateJob(@RequestParam String objId,Model model) throws ParseException {
+	public String deleteHateJob(@RequestParam Integer objId,Model model) throws ParseException {
 		ApplicationContext context = 
 	             new ClassPathXmlApplicationContext("Beans.xml");
 
@@ -212,7 +321,7 @@ public class WebServiceController {
 		Map<String,Object> map = model.asMap();
 		List<Job> jobs = (List<Job>) map.get("jobList");
 		for(Job job:jobs) {
-			if(job.getObjId().equals(objId)) {
+			if(job.getJobId() == objId) {
 				studentJDBCTemplate.deleteHatedJob(job);
 			}
 		}
@@ -227,5 +336,7 @@ public class WebServiceController {
 		String jsonString = mapper.writeValueAsString(list);
 		return jsonString;
 	}
+	
+	
 }
 

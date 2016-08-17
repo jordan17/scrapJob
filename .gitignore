@@ -1,2 +1,6 @@
 /build/
 /target/
+
+*/mvc-config.xml
+*/hibernate.cfg.xml
+*/Beans.xml

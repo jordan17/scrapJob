@@ -18,6 +18,9 @@ import org.springframework.web.servlet.ModelAndView;
 
 import per.qoq.scrap.jobsdb.entity.Job;
 import per.qoq.scrap.jobsdb.entity.SavedJob;
+import per.qoq.scrap.jobsdb.entity.SavedJobAnalyze;
+import per.qoq.scrap.jobsdb.enu.AgentEnum;
+import per.qoq.scrap.jobsdb.helper.ExtractJobJdbcTemplate;
 import per.qoq.scrap.jobsdb.helper.JobListAnalyser;
 import per.qoq.scrap.jobsdb.helper.MongoDbConnecter;
 import per.qoq.scrap.jobsdb.helper.SavedJobJDBCTemplate;
@@ -48,55 +51,33 @@ public class JobsDbHelloWorld {
 	@RequestMapping("/test1")
 	public ModelAndView testTable(Model model) {
 		 
-		/*String message = "<br><div style='text-align:center;'>"
-				+ "<h3>********** Hello World,I am QoQ</h3>This message is coming from CrunchifyHelloWorld.java **********</div><br><br>";
-		*/
+		//List<Job> message =MongoDbConnecter.getTestDB();
 		
-		List<Job> message =MongoDbConnecter.getTestDB();
+		ApplicationContext context = 
+	             new ClassPathXmlApplicationContext("Beans.xml");
+
+	    ExtractJobJdbcTemplate studentJDBCTemplate = 
+	      (ExtractJobJdbcTemplate)context.getBean("extractedJobJDBCTemplate");
+		
+	    List<Job> message = studentJDBCTemplate.getExtractedJob();
 		FilterCompany form = new FilterCompany();
 		ModelAndView view = new ModelAndView("/test1");
 		
 		List<String> companys = MongoDbConnecter.getCompanySet();
 		Map<String,Integer> companyCount = JobListAnalyser.getCompanyCount();
+		model.addAttribute("skillList", AgentEnum.getSkills());
+		view.addObject("skillList", AgentEnum.getSkills());
 		view.addObject("companyList",companys);
 		view.addObject("filterCompany", form);
 		view.addObject("companyCount",companyCount);
 		
 		/* function of saved job start*/
-		ApplicationContext context = 
-	             new ClassPathXmlApplicationContext("Beans.xml");
-
-	    /*SavedJobJDBCTemplate studentJDBCTemplate = 
-	      (SavedJobJDBCTemplate)context.getBean("savedJobJDBCTemplate");
-	    List<SavedJob> sjs = studentJDBCTemplate.getSavedJob();
-	    Map<String,List<String>> company_jobMap = new HashMap<String,List<String>>();
-	    for(SavedJob sj : sjs) {
-	    	String company = sj.getCompany();
-	    	String title = sj.getTitle();
-	    	if(company_jobMap.get(company)==null) {
-	    		List<String> titleList = new ArrayList<String>();
-	    		titleList.add(title);
-	    		company_jobMap.put(company,titleList);
-	    	}
-	    	else {
-	    		List<String> titleList = (List<String>)company_jobMap.get(company);
-	    		titleList.add(title);
-	    		company_jobMap.put(company,titleList);
-	    	}
-	    }
-	    
-	    for(Job job:message) {
-	    	if(company_jobMap.containsKey(job.getCompany())) {
-	    		List<String> titleList = company_jobMap.get(job.getCompany());
-	    		if(titleList.contains(job.getJobTtile())) {
-	    			job.setSaved(true);
-	    		}
-	    	}
-	    }*/
+	   
 		Utils.getSavedJob(message);
 	    /* function of saved job end */
 	    model.addAttribute("jobList", message);
 	    view.addObject("jobList", message);
+	    view.addAllObjects(model.asMap());
 	    return view;
 	}
 	
@@ -116,4 +97,26 @@ public class JobsDbHelloWorld {
 		//view.addObject("companyList",companyCount);
 		return view;
 	}
+	
+	@RequestMapping("/SavedJobAnalyze")
+	public ModelAndView analyzeSavedJob() {
+		
+		ApplicationContext context = 
+	             new ClassPathXmlApplicationContext("Beans.xml");
+
+	    SavedJobJDBCTemplate savedJobJDBCTemplate = 
+	      (SavedJobJDBCTemplate)context.getBean("savedJobJDBCTemplate");
+		ExtractJobJdbcTemplate extractedJobJDBCTemplate = 
+				(ExtractJobJdbcTemplate)context.getBean("extractedJobJDBCTemplate");
+		//Map<String,Integer> companyCount = JobListAnalyser.getCompanyCount();
+		ModelAndView view = new ModelAndView("/SavedJobAnalyze");
+		List<SavedJobAnalyze> resultList = savedJobJDBCTemplate.getSavedJobAnalyze();
+		for(SavedJobAnalyze sja : resultList) {
+			Job job = extractedJobJDBCTemplate.getJobById(sja.getMax_id());
+			if(job!=null) sja.setUrl(job.getUrl());
+		}
+		view.addObject("jobList",resultList);
+		return view;
+	}
+	
 }

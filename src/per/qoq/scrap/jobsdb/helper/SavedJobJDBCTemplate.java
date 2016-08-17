@@ -16,8 +16,10 @@ import per.qoq.scrap.jobsdb.dao.SavedJobDAO;
 import per.qoq.scrap.jobsdb.entity.HateJob;
 import per.qoq.scrap.jobsdb.entity.Job;
 import per.qoq.scrap.jobsdb.entity.SavedJob;
+import per.qoq.scrap.jobsdb.entity.SavedJobAnalyze;
 import per.qoq.scrap.jobsdb.hibernate.SavedJobs;
 import per.qoq.scrap.jobsdb.mapper.HateJobMapper;
+import per.qoq.scrap.jobsdb.mapper.SavedJobAnalyzeMapper;
 import per.qoq.scrap.jobsdb.mapper.SavedJobMapper;
 
 public class SavedJobJDBCTemplate{
@@ -37,8 +39,12 @@ public class SavedJobJDBCTemplate{
 		List<SavedJob> sjs = jdbcTemplateObject.query(SQL,new SavedJobMapper());
 		return sjs;
 	}
-
-	
+	public List<SavedJobAnalyze> getSavedJobAnalyze() {
+		// TODO Auto-generated method stub
+		String SQL = "select * from saved_job_analyze";
+		List<SavedJobAnalyze> sjs = jdbcTemplateObject.query(SQL,new SavedJobAnalyzeMapper());
+		return sjs;
+	}
 	public void addSavedJob(Job job) {
 		// TODO Auto-generated method stub
 		String SQL = "insert into saved_jobs(user_id,title,company,saved,job_desc,job_id,saved_time,url) values(?,?,?,'T',?,?,NOW(),?)";
