@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -111,10 +113,17 @@ public class JobsDbHelloWorld {
 		//Map<String,Integer> companyCount = JobListAnalyser.getCompanyCount();
 		ModelAndView view = new ModelAndView("/SavedJobAnalyze");
 		List<SavedJobAnalyze> resultList = savedJobJDBCTemplate.getSavedJobAnalyze();
-		for(SavedJobAnalyze sja : resultList) {
+		List<Integer> idList = resultList.stream().map(job -> job.getMax_id()).collect(Collectors.toList());
+		Map<Integer,SavedJobAnalyze> resultSet =  resultList.stream().collect(Collectors.toMap(SavedJobAnalyze::getMax_id, Function.identity()));
+		/*for(SavedJobAnalyze sja : resultList) {
 			Job job = extractedJobJDBCTemplate.getJobById(sja.getMax_id());
 			if(job!=null) sja.setUrl(job.getUrl());
+		}*/
+		List<Job> jobList = extractedJobJDBCTemplate.getJobByIdList(idList);
+		for(Job job:jobList) {
+			resultSet.get(job.getJobId()).setUrl(job.getUrl());
 		}
+		resultList = new ArrayList<SavedJobAnalyze>(resultSet.values());
 		view.addObject("jobList",resultList);
 		return view;
 	}

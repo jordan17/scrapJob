@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collector;
@@ -209,8 +210,10 @@ public class WebServiceController {
 	}
 	
 	@RequestMapping(value = "/filterAgent" ,method=RequestMethod.POST)
-	public ModelAndView filterAgent(@RequestParam String true_False,Model model) throws ParseException {
+	public ModelAndView filterAgent(@RequestParam(required=false) String true_False,@RequestParam(required=false) String PCCW,Model model) throws ParseException {
 		
+		Optional<String> pccw = Optional.ofNullable(PCCW);
+		Optional<String> agent = Optional.ofNullable(true_False);
 		boolean filter = false;
 		ApplicationContext context = 
 	             new ClassPathXmlApplicationContext("Beans.xml");
@@ -218,7 +221,7 @@ public class WebServiceController {
 		CompanySumJDBCTemplate studentJDBCTemplate = 
 	      (CompanySumJDBCTemplate)context.getBean("CompanySumJDBCTemplate");
 		
-		if(true_False.equalsIgnoreCase("True")) filter = true;
+		if(agent.orElse("false").equalsIgnoreCase("True")) filter = true;
 		
 		Map<String,Object> map = model.asMap();
 		List<Job> message =null;
@@ -231,6 +234,10 @@ public class WebServiceController {
 		}
 		List<String> agentNames = studentJDBCTemplate.getAgentName();
 		Set<String> agentSet = agentNames.stream().collect(Collectors.toSet());
+		if(pccw.orElse("false").equalsIgnoreCase("true")) {
+			agentSet.add("PCCW Solutions Ltd");
+			agentSet.add("PCCW Solutions Limited");
+		}
 		List<Job> resultJobs = message.stream().filter(job -> !agentSet.contains(job.getCompany()) ).collect(Collectors.toList());
 		Utils.getSavedJob(resultJobs);
 		ModelAndView view = new ModelAndView("/test1");

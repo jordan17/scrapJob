@@ -47,9 +47,9 @@ public class SavedJobJDBCTemplate{
 	}
 	public void addSavedJob(Job job) {
 		// TODO Auto-generated method stub
-		String SQL = "insert into saved_jobs(user_id,title,company,saved,job_desc,job_id,saved_time,url) values(?,?,?,'T',?,?,NOW(),?)";
+		String SQL = "insert into saved_jobs(user_id,title,company,saved,job_id,saved_time,url) values(?,?,?,true,?,NOW(),?)";
 		try {
-			jdbcTemplateObject.update(SQL,"123",job.getJobTtile(),job.getCompany(),job.getJobDesc(),job.getObjId(),job.getUrl());
+			jdbcTemplateObject.update(SQL,"123",job.getJobTtile(),job.getCompany(),job.getJobId(),job.getUrl());
 			log.info(job.getJobTtile()+" added");
 		}
 		catch(DataAccessException de) {

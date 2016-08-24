@@ -119,6 +119,7 @@ function deleteHateJob(jj,ref) {
 </form>
 <form action="${pageContext.request.contextPath}/service/filterAgent" method="post">
 	<input type="checkbox" name="true_False" class="checkBoxes" value="true">Filter agent</input>
+	<input type="checkbox" name="PCCW" class="checkBoxes" value="true">Filter PCCW</input>
 	<input type="submit"value="Submit"/>
 </form>
 <form method="post" action="${pageContext.request.contextPath}/service/filterBySkill">

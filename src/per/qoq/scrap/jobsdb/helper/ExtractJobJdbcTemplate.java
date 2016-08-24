@@ -4,7 +4,9 @@ import java.util.Date;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -12,6 +14,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
 import per.qoq.scrap.jobsdb.entity.Job;
@@ -92,5 +95,24 @@ public class ExtractJobJdbcTemplate {
 			de.printStackTrace();
 		}
 		return job.get(0);
+	}
+	
+	@Transactional
+	public List<Job> getJobByIdList(List<Integer> jobId) {
+		String SQL = "select * from extracted_job where job_id IN (:ids)";
+		List<Job> job = new ArrayList<>();
+		Map<String,List> paramMap = Collections.singletonMap("ids", jobId);
+		List<Integer> resultIds = new ArrayList<Integer>();
+		try {
+			NamedParameterJdbcTemplate template = new NamedParameterJdbcTemplate(jdbcTemplateObject.getDataSource());
+			//job = template.queryForList(SQL,paramMap,Integer.class,new ExtractedJobMapper());
+			job = template.query(SQL, paramMap,new ExtractedJobMapper());
+			//resultIds = jdbcTemplateObject.query(SQL.toString(),y,(ResultSet rs,int rowNum) -> { log.debug(rs.getString("job_id"));return rs.getString("job_id");});
+			//resultIds = jdbcTemplateObject.queryForList(SQL.toString(),y);
+		}
+		catch(DataAccessException de) {
+			de.printStackTrace();
+		}
+		return job;
 	}
 }
