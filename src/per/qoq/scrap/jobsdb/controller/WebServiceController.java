@@ -255,6 +255,41 @@ public class WebServiceController {
 		view.addObject("companyCount",companyCount);
 		return view;
 	}
+	@RequestMapping(value = "/filterAgentJSON" ,method=RequestMethod.POST)
+	public @ResponseBody List<Job> filterAgentJSON(@RequestParam(required=false) String true_False,@RequestParam(required=false) String PCCW,Model model) throws ParseException {
+		
+		Optional<String> pccw = Optional.ofNullable(PCCW);
+		Optional<String> agent = Optional.ofNullable(true_False);
+		boolean filter = false;
+		ApplicationContext context = 
+	             new ClassPathXmlApplicationContext("Beans.xml");
+
+		CompanySumJDBCTemplate studentJDBCTemplate = 
+	      (CompanySumJDBCTemplate)context.getBean("CompanySumJDBCTemplate");
+		
+		if(agent.orElse("false").equalsIgnoreCase("True")) filter = true;
+		
+		Map<String,Object> map = model.asMap();
+		List<Job> message =null;
+		
+		if(map.get("jobList")!=null) {
+			message = (List<Job>) map.get("jobList");
+		}
+		else {
+			 message =MongoDbConnecter.getTestDB();
+		}
+		List<String> agentNames = studentJDBCTemplate.getAgentName();
+		Set<String> agentSet = agentNames.stream().collect(Collectors.toSet());
+		if(pccw.orElse("false").equalsIgnoreCase("true")) {
+			agentSet.add("PCCW Solutions Ltd");
+			agentSet.add("PCCW Solutions Limited");
+		}
+		List<Job> resultJobs = message.stream().filter(job -> !agentSet.contains(job.getCompany()) ).collect(Collectors.toList());
+		Utils.getSavedJob(resultJobs);
+		FilterCompany form = new FilterCompany();
+		model.addAttribute("jobList", resultJobs);
+		return resultJobs;
+	}
 	@RequestMapping(value = "/saveJob" ,method=RequestMethod.POST)
 	public @ResponseBody String saveJob(@RequestParam("objId") Integer objId,Model model) throws ParseException {
 		ApplicationContext context = 
