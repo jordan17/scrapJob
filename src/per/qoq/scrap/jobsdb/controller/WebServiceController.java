@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -65,7 +66,10 @@ public class WebServiceController {
 	@Autowired
 	private HateJobDAO hateJobDao;
 	
+	
 	static Logger log = Logger.getLogger(WebServiceController.class.getName());
+	ApplicationContext context =  new ClassPathXmlApplicationContext("Beans.xml");
+
 	
 	@ModelAttribute("skillList")
 	public List<String> getSkillList() {
@@ -344,6 +348,14 @@ public class WebServiceController {
 		return jsonString;
 	}
 	
-	
+	@RequestMapping(value = "/getCompany/{company}" ,method=RequestMethod.GET)
+	@ResponseBody
+	@Transactional
+	public List<Job> getCompany(@PathVariable(value="company") String company) throws JsonProcessingException {
+		ExtractJobJdbcTemplate studentJDBCTemplate = (ExtractJobJdbcTemplate)context.getBean("extractedJobJDBCTemplate");
+		
+		List<Job> resultList = studentJDBCTemplate.getCompanyJob(company);
+		return resultList;
+	}
 }
 

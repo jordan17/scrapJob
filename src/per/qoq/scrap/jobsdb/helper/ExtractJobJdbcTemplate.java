@@ -45,6 +45,18 @@ public class ExtractJobJdbcTemplate {
 		return jobList;
 	}
 	
+	public List<Job> getCompanyJob(String companyName) {
+		String SQL = "select * from extracted_job where company_name LIKE ? order by date_posted desc limit 400";
+		List<Job> jobList = new ArrayList<Job>();
+		StringBuilder sb = new StringBuilder("%").append(companyName).append("%");
+		try {
+			jobList = jdbcTemplateObject.query(SQL,new Object[]{sb.toString()},new int[]{Types.VARCHAR},new ExtractedJobMapper());
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+		return jobList;
+	}
 	public List<Job> filterByDate(Date dateBefore,Date dateAfter) {
 		String SQL = "select * from extracted_job where date_posted <= ? AND date_posted >= ?";
 		List<Job> jobList = new ArrayList<Job>();

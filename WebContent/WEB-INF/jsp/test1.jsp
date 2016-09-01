@@ -17,6 +17,7 @@
   #cpyTable {width : 50%;}
   .checkBoxes {display:inline-block;}
   .select {background-color:#AAAAAA;}
+  .smallCell { width:5%;}
   </style>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
@@ -29,7 +30,9 @@
 		$('#cpyTable').dataTable({paging:true});
 		$('#dateBefore').datepicker();
 		$('#dateAfter').datepicker();
-		
+		/* $('#companySearchBtn').on("click",function(){
+			var text = $('#companyName').val();
+			getCompanyJob(text);}); */
 		<%--$('#companyList').selectmenu().selectmenu('menuWidget').addClass('overflow');--%>
 		});
 	function filterByDate() {
@@ -98,6 +101,20 @@ function deleteHateJob(jj,ref) {
         }
 	);
 }
+function getCompanyJob(jobName) {
+	jobTable.api().destroy();
+	$.ajax({type:"get",
+		url:"${pageContext.request.contextPath}/service/getCompany/"+jobName,
+		dataType:'json',
+		success: function(res){
+				rebuildTable(res);
+			},
+		error:function( jqXHR,  textStatus,  errorThrown ){
+            alert('error '+errorThrown);
+        	}
+	    }
+    );
+}
 	function removeCompany(companyName) {
 			console.log("remove Company:"+companyName);
 			jobTable.api().destroy();
@@ -109,6 +126,17 @@ function deleteHateJob(jj,ref) {
 				});
 			 jobTable.dataTable(dateTable_option);
 	}
+	function rebuildTable(jsonArr) {
+			inner = '<thead><tr><th class="smallCell">save</th><th class="smallCell">hate</th><th>Title</th><th>Company</th><th class="smallCell"></th><th>Date</th><th class="smallCell">URL</th></tr></thead><tbody>';
+			$.each(jsonArr,function(index,item){
+				
+				trHTML="<tr><td>"+item.saved+"</td><td>"+item.hated+"</td><td>"+item.jobTtile+"</td><td>"+item.company+"</td><td></td><td>"+item.datePosted+"</td><td>"+item.url+"</td></tr>";
+				inner+=trHTML;});
+			inner+="</tbody>";
+			//console.log(inner);
+			$("#jobTable").html(inner);
+			jobTable=$('#jobTable').dataTable(dateTable_option);
+		}
 </script>
 </head>
 <body>
@@ -117,6 +145,10 @@ function deleteHateJob(jj,ref) {
 	<input type="text" name="dateAfter" id="dateAfter"/> <input type="text" name="dateBefore" id="dateBefore"/>
 	<input type="submit" value="filter" />
 </form>
+<div>
+<input type="text" id="companyName"/>
+	<input type="button" value="filter" id="companySearchBtn"/>
+	</div>
 <form action="${pageContext.request.contextPath}/service/filterAgent" method="post">
 	<input type="checkbox" name="true_False" class="checkBoxes" value="true">Filter agent</input>
 	<input type="checkbox" name="PCCW" class="checkBoxes" value="true">Filter PCCW</input>
@@ -132,13 +164,13 @@ function deleteHateJob(jj,ref) {
 </form>
 		<table id="jobTable" class="display" cellspacing="0">
 			<thead>
-				<tr><th style="width:5%">save</th> 
-					<th style="width:5%">hate</th>
+				<tr><th class="smallCell">save</th> 
+					<th class="smallCell">hate</th>
 					<th>Title</th>
 					<th>Company</th>
-					<th style="width:3%"></th>
+					<th class="smallCell"></th>
 					<th>Date</th>
-					<th style="width:5%">URL</th>
+					<th class="smallCell">URL</th>
 					</tr>
 			</thead>
 			<tbody>
@@ -160,7 +192,9 @@ function deleteHateJob(jj,ref) {
 					<td><div onclick="$('#content-${count}').dialog({width:'80%',closeOnEscape:true}).show()">
 					<span style="${job.saved==true?'color:red;':''}${job.hated==true?'color:blue;':''}">${job.jobTtile}</span>
 					</div></td>
-					<td class="company" style="${job.manyJobs==true?'color:red;':''}">${job.company}</td>
+					<td class="company" style="${job.manyJobs==true?'color:red;':''}" >
+					<!--  onclick="getCompanyJob('${job.company}')" -->
+					${job.company}</td>
 					<td><span class="ui-icon ui-icon-closethick" style="display:inline-block" onclick='removeCompany($(this).parent().prev("td.company").text())'></span></td>
 					<td><fmt:formatDate value="${job.datePosted}" pattern="yyyy-MM-dd" /></td>
 					<td><a href="${job.url}">click</a></td>
