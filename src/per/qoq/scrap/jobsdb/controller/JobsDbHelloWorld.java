@@ -10,11 +10,15 @@ import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.SessionAttributes;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -36,6 +40,8 @@ import per.qoq.scrap.jobsdb.model.FilterCompany;
 @SessionAttributes("jobList")
 public class JobsDbHelloWorld {
 	
+	static Logger logger = Logger.getLogger(JobsDbHelloWorld.class.getName());
+	
 	@RequestMapping("/welcome")
 	public ModelAndView helloWorld() {
  
@@ -50,24 +56,29 @@ public class JobsDbHelloWorld {
 		return view;
 	}
 	
-	@RequestMapping("/test1")
-	public ModelAndView testTable(Model model) {
+	@RequestMapping("/home")
+	public ModelAndView testTable(ModelMap modelView) {
 		 
 		//List<Job> message =MongoDbConnecter.getTestDB();
-		
+		logger.info("enter testTable");
 		ApplicationContext context = 
 	             new ClassPathXmlApplicationContext("Beans.xml");
-
+		
+		
 	    ExtractJobJdbcTemplate studentJDBCTemplate = 
 	      (ExtractJobJdbcTemplate)context.getBean("extractedJobJDBCTemplate");
 		
+	    if(modelView.get("redirect")!=null) {
+	    	return new ModelAndView("test1",modelView);
+	    }
 	    List<Job> message = studentJDBCTemplate.getExtractedJob();
 		FilterCompany form = new FilterCompany();
 		ModelAndView view = new ModelAndView("/test1");
 		
 		List<String> companys = MongoDbConnecter.getCompanySet();
 		Map<String,Integer> companyCount = JobListAnalyser.getCompanyCount();
-		model.addAttribute("skillList", AgentEnum.getSkills());
+		Map model=  view.getModel();
+		model.put("skillList", AgentEnum.getSkills());
 		view.addObject("skillList", AgentEnum.getSkills());
 		view.addObject("companyList",companys);
 		view.addObject("filterCompany", form);
@@ -77,9 +88,9 @@ public class JobsDbHelloWorld {
 	   
 		Utils.getSavedJob(message);
 	    /* function of saved job end */
-	    model.addAttribute("jobList", message);
+	    model.put("jobList", message);
 	    view.addObject("jobList", message);
-	    view.addAllObjects(model.asMap());
+	    view.addAllObjects(model);
 	    return view;
 	}
 	
@@ -99,7 +110,14 @@ public class JobsDbHelloWorld {
 		//view.addObject("companyList",companyCount);
 		return view;
 	}
-	
+	@RequestMapping("/iReserveTable")
+	public ModelAndView iReserveTable() {
+		
+		//Map<String,Integer> companyCount = JobListAnalyser.getCompanyCount();
+		ModelAndView view = new ModelAndView("/iReserveTable");
+		//view.addObject("companyList",companyCount);
+		return view;
+	}
 	@RequestMapping("/SavedJobAnalyze")
 	public ModelAndView analyzeSavedJob() {
 		

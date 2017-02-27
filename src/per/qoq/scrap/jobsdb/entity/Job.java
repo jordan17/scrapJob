@@ -26,6 +26,7 @@ public class Job {
 	private boolean hated;
 	private String experience;
 	private boolean manyJobs;
+	
 	public String getJobCate() {
 		return jobCate;
 	}

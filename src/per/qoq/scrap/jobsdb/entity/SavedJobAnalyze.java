@@ -26,5 +26,10 @@ public class SavedJobAnalyze extends Job {
 	public void setMax_id(int max_id) {
 		this.max_id = max_id;
 	}
+	@Override
+	public int getJobId() {
+		// TODO Auto-generated method stub
+		return this.getMax_id();
+	}
 	
 }

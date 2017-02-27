@@ -79,7 +79,7 @@ public class SavedJobJDBCTemplate{
 		// TODO Auto-generated method stub
 		String SQL = "insert into hate_jobs(title,company,job_id,saved_time) values(?,?,?,NOW())";
 		try {
-			jdbcTemplateObject.update(SQL,job.getJobTtile(),job.getCompany(),job.getObjId());
+			jdbcTemplateObject.update(SQL,job.getJobTtile(),job.getCompany(),job.getJobId());
 			log.info(job.getJobTtile()+" hated");
 		}
 		catch(DataAccessException de) {
@@ -91,7 +91,7 @@ public class SavedJobJDBCTemplate{
 
 	public void deleteHatedJob(Job job) {
 		// TODO Auto-generated method stub
-		String SQL = "delete from hate_jobs where title = ? AND company = ? ";
+		String SQL = "delete from hate_jobs where title LIKE ? AND company LIKE ? ";
 		jdbcTemplateObject.update(SQL,job.getJobTtile(),job.getCompany());
 		log.debug(job.getJobTtile()+" removed");
 		return;

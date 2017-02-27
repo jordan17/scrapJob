@@ -4,8 +4,6 @@ import java.util.List;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import per.qoq.scrap.jobsdb.entity.Job;
 import per.qoq.scrap.jobsdb.entity.SavedJob;
 import per.qoq.scrap.jobsdb.hibernate.SavedJobs;

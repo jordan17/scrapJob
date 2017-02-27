@@ -67,7 +67,7 @@ public class WebServiceController {
 	private HateJobDAO hateJobDao;
 	
 	
-	static Logger log = Logger.getLogger(WebServiceController.class.getName());
+	static Logger logger = Logger.getLogger(WebServiceController.class.getName());
 	ApplicationContext context =  new ClassPathXmlApplicationContext("Beans.xml");
 
 	
@@ -137,9 +137,42 @@ public class WebServiceController {
 	}
 	
 
+	@RequestMapping(value = "/filterByDateJSON" ,method=RequestMethod.POST,produces="application/json")
+	public @ResponseBody Map filterByDateJSON(@RequestParam String dateAfter,@RequestParam String dateBefore,ModelMap map) throws ParseException, JsonProcessingException {
+		
+		logger.info("enter filterByDate");
+		SimpleDateFormat simple = new SimpleDateFormat("MM/dd/yyyy",Locale.ENGLISH);
+		//SimpleDateFormat simple = new SimpleDateFormat("yyyyMMDD",Locale.ENGLISH);
+		//Map<String,Object> map = model.asMap();
+		//List<Job> message =  MongoDbConnecter.filterByDate(simple.parse(dateBefore),simple.parse(dateAfter));
+		
+	    ExtractJobJdbcTemplate studentJDBCTemplate = 
+	      (ExtractJobJdbcTemplate)context.getBean("extractedJobJDBCTemplate");
+	    Timestamp db = new Timestamp(simple.parse(dateBefore).getTime());
+	    Timestamp da = new Timestamp(simple.parse(dateAfter).getTime());
+	    List<Job> message = studentJDBCTemplate.filterByDate(simple.parse(dateBefore),simple.parse(dateAfter));
+		Utils.getSavedJob(message);
+		
+		FilterCompany form = new FilterCompany();
+		//view.addObject("jobList",message);
+		ObjectMapper om = new ObjectMapper();
+		Map<String,Integer> companyCount = JobListAnalyser.getCompanyCount(message);
+		Set<String> companys = new TreeSet<String>(companyCount.keySet());
+		map.put("companyList",companys);
+		map.put("jobList", message);
+		map.put("companyCount",companyCount);
+		map.put("redirect", true);
+		StringBuilder sb = new StringBuilder("");
+		Map<String,Object> mapResult = new HashMap<String,Object>();
+		mapResult.put("jobList", om.writeValueAsString(message));
+		mapResult.put("companyCount", om.writeValueAsString(companyCount));
+		return mapResult;
+	}
+	
 	@RequestMapping(value = "/filterByDate" ,method=RequestMethod.POST)
 	public ModelAndView filterByDate(@RequestParam String dateAfter,@RequestParam String dateBefore,ModelMap map) throws ParseException {
 		
+		logger.info("enter filterByDate");
 		SimpleDateFormat simple = new SimpleDateFormat("MM/dd/yyyy",Locale.ENGLISH);
 		//SimpleDateFormat simple = new SimpleDateFormat("yyyyMMDD",Locale.ENGLISH);
 		//Map<String,Object> map = model.asMap();
@@ -155,23 +188,24 @@ public class WebServiceController {
 	    List<Job> message = studentJDBCTemplate.filterByDate(simple.parse(dateBefore),simple.parse(dateAfter));
 		Utils.getSavedJob(message);
 		
-		ModelAndView view = new ModelAndView("/test1");
+		ModelAndView view = new ModelAndView("redirect:/test1");
 		FilterCompany form = new FilterCompany();
 		//view.addObject("jobList",message);
 		
 		Map<String,Integer> companyCount = JobListAnalyser.getCompanyCount(message);
 		Set<String> companys = new TreeSet<String>(companyCount.keySet());
 		//view.addObject("companyList",companys);
-		map.addAttribute("companyList",companys);
-		map.addAttribute("jobList", message);
+		map.put("companyList",companys);
+		map.put("jobList", message);
 		//view.addObject("filterCompany", form);
 		//map.addAttribute("filterCompany", form);
 		//view.addObject("companyCount",companyCount);
-		map.addAttribute("companyCount",companyCount);
+		map.put("companyCount",companyCount);
+		map.put("redirect", true);
 		view.addAllObjects(map);
+		
 		return view;
 	}
-	
 	@RequestMapping(value = "/filterBySkill" ,method=RequestMethod.POST)
 	public ModelAndView filterBySkill(@RequestParam String skill,Model model) throws ParseException {
 		
@@ -241,6 +275,12 @@ public class WebServiceController {
 		if(pccw.orElse("false").equalsIgnoreCase("true")) {
 			agentSet.add("PCCW Solutions Ltd");
 			agentSet.add("PCCW Solutions Limited");
+			agentSet.add("Macroview Telecom Limited");
+			agentSet.add("CL TECHNICAL SERVICES LIMITED");
+			agentSet.add("Wai On Services Limited");
+			agentSet.add("Microware Limited");
+			agentSet.add("CL Technical Services Ltd");
+			agentSet.add("Wai On Service Limited");
 		}
 		List<Job> resultJobs = message.stream().filter(job -> !agentSet.contains(job.getCompany()) ).collect(Collectors.toList());
 		Utils.getSavedJob(resultJobs);
@@ -255,6 +295,7 @@ public class WebServiceController {
 		view.addObject("companyCount",companyCount);
 		return view;
 	}
+	
 	@RequestMapping(value = "/filterAgentJSON" ,method=RequestMethod.POST)
 	public @ResponseBody List<Job> filterAgentJSON(@RequestParam(required=false) String true_False,@RequestParam(required=false) String PCCW,Model model) throws ParseException {
 		
@@ -290,6 +331,30 @@ public class WebServiceController {
 		model.addAttribute("jobList", resultJobs);
 		return resultJobs;
 	}
+	
+	@RequestMapping(value = "/filterHateJSON" ,method=RequestMethod.POST)
+	public @ResponseBody List<Job> filterHateJobJSON(@RequestParam(required=false) String filterHate,Model model) throws ParseException {
+		
+		Optional<String> filterHated = Optional.ofNullable(filterHate);
+		
+		boolean filter = false;
+
+		if(filterHated.orElse("false").equalsIgnoreCase("True")) filter = true;
+		
+		Map<String,Object> map = model.asMap();
+		List<Job> message =null;
+		
+		if(map.get("jobList")!=null) {
+			message = (List<Job>) map.get("jobList");
+		}
+		else {
+			 message =MongoDbConnecter.getTestDB();
+		}
+		List<Job> resultJobs = message.stream().filter(job -> !job.isHated() ).collect(Collectors.toList());
+		Utils.getSavedJob(resultJobs);
+		return resultJobs;
+	}
+	
 	@RequestMapping(value = "/saveJob" ,method=RequestMethod.POST)
 	public @ResponseBody String saveJob(@RequestParam("objId") Integer objId,Model model) throws ParseException {
 		ApplicationContext context = 

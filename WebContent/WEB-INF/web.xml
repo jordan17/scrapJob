@@ -5,7 +5,7 @@
     <welcome-file>index.jsp</welcome-file>
   </welcome-file-list>
   <session-config>
-	<session-timeout>60</session-timeout>
+	<session-timeout>120</session-timeout>
 </session-config>
   <servlet>
     <servlet-name>jobsdb</servlet-name>
@@ -25,6 +25,7 @@
     <url-pattern>/test1*</url-pattern>
     <url-pattern>/test2*</url-pattern>
     <url-pattern>*.html</url-pattern>
+    <url-pattern>/home*</url-pattern>
     <url-pattern>/</url-pattern>
   </servlet-mapping>
 </web-app>

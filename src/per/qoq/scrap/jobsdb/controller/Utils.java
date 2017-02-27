@@ -33,24 +33,24 @@ public class Utils {
 			    Set<String> jobIdList = new HashSet<String>();
 			    for(SavedJob sj : sjs) {
 			    	jobIdList.add(sj.getJobId());
-			    	if(company_jobMap.get(sj.getCompany())==null) {
-			    		company_jobMap.put(sj.getCompany(), new HashSet<String>());
+			    	if(company_jobMap.get(sj.getCompany().toLowerCase())==null) {
+			    		company_jobMap.put(sj.getCompany().toLowerCase(), new HashSet<String>());
 			    	}
-			    	((Set<String>)company_jobMap.get(sj.getCompany())).add(sj.getTitle());
+			    	((Set<String>)company_jobMap.get(sj.getCompany().toLowerCase())).add(sj.getTitle());
 			    }
 			    StringBuilder sb = new StringBuilder("");
 			    for(Job job:message) {
-			    	String jobDesc = job.getJobDesc();
+			    	/*String jobDesc = job.getJobDesc();
 			    	if(jobDesc.contains("counter.adcourier.com")) {
 			    		job.setJobDesc(jobDesc.replaceAll(regex, ""));
-			    	}
+			    	}*/
 			    	/*
 			    	if(jobIdList.contains(job.getObjId())) {
 			    			job.setSaved(true);
 			    	}
 			    	*/
-			    	if(company_jobMap.get(job.getCompany())!=null) {
-			    		if(((Set<String>)company_jobMap.get(job.getCompany())).contains(job.getJobTtile())) {
+			    	if(company_jobMap.get(job.getCompany().toLowerCase())!=null) {
+			    		if(((Set<String>)company_jobMap.get(job.getCompany().toLowerCase())).contains(job.getJobTtile())) {
 			    			sb = new StringBuilder(job.getJobTtile());
 			    			//sb.insert(0, "<span style='color:red'>");
 			    			//sb.append("</span>");
@@ -114,10 +114,10 @@ public class Utils {
 			    Set<String> jobIdList = new HashSet<String>();
 			    for(HateJob sj : sjs) {
 			    	jobIdList.add(sj.getJobId());
-			    	if(company_jobMap.get(sj.getCompany())==null) {
-			    		company_jobMap.put(sj.getCompany(), new HashSet<String>());
+			    	if(company_jobMap.get(sj.getCompany().toLowerCase())==null) {
+			    		company_jobMap.put(sj.getCompany().toLowerCase(), new HashSet<String>());
 			    	}
-			    	((Set<String>)company_jobMap.get(sj.getCompany())).add(sj.getTitle());
+			    	((Set<String>)company_jobMap.get(sj.getCompany().toLowerCase())).add(sj.getTitle());
 			    }
 			    StringBuilder sb = new StringBuilder("");
 			    for(Job job:message) {
@@ -126,12 +126,12 @@ public class Utils {
 			    			job.setHated(true);
 			    	}
 			    	*/
-			    	if(company_jobMap.get(job.getCompany())!=null) {
-			    		if(((Set<String>)company_jobMap.get(job.getCompany())).contains(job.getJobTtile())) {
-			    			sb = new StringBuilder(job.getJobTtile());
+			    	if(company_jobMap.get(job.getCompany().toLowerCase())!=null) {
+			    		if(((Set<String>)company_jobMap.get(job.getCompany().toLowerCase())).contains(job.getJobTtile())) {
+			    			//sb = new StringBuilder(job.getJobTtile());
 			    			//sb.insert(0, "<span style='color:blue'>");
 			    			//sb.append("</span>");
-			    			job.setJobTtile(sb.toString());
+			    			//job.setJobTtile(sb.toString());
 			    			job.setHated(true);
 			    		}
 			    	}

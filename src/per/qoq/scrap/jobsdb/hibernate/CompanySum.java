@@ -9,7 +9,8 @@ import javax.persistence.ManyToOne;
  */
 @Entity
 public class CompanySum implements java.io.Serializable {
-
+	
+	
 	@ManyToOne
 	private CompanySumId id;
 

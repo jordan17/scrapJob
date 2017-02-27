@@ -37,7 +37,7 @@ public class MongoDbConnecter {
 	private static Calendar jobTimeStamp = null;
 	private static void connect() {
 		MongoCredential credential = MongoCredential.createCredential("admin02", "admin", "Jordan17".toCharArray());
-		ServerAddress address = new ServerAddress("localhost",27071);
+		ServerAddress address = new ServerAddress("localhost",27017);
 		List<MongoCredential> cList = new ArrayList<MongoCredential>();
 		cList.add(credential);
 		client = new MongoClient(address,cList);

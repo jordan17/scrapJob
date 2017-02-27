@@ -7,10 +7,14 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Homepage</title>
-<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.11/css/jquery.dataTables.min.css">
+
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <style>
   .overflow { height: 200px; }
   .company-list {height:300px;}
@@ -18,17 +22,21 @@
   .checkBoxes {display:inline-block;}
   .select {background-color:#AAAAAA;}
   .smallCell { width:5%;}
+  .pointer {background-color:#AA00AA;}
   </style>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-<script type="text/javascript" src="https://cdn.datatables.net/u/dt/dt-1.10.12/datatables.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs-3.3.7/dt-1.10.13/datatables.min.css"/>
+<script type="text/javascript" src="https://cdn.datatables.net/v/bs-3.3.7/dt-1.10.13/datatables.min.js"></script>
 
 <script type="text/javascript" >
 	var jobTable;
-	var dateTable_option = {paging:true,autoWidth:true,pageLength:100,lengthChange:true};
+	var cmpTable;
+	var jobMap = {};
+	var dateTable_option = {paging:true,autoWidth:true,pageLength:25,lengthChange:true};
 	$(document).ready(function(){
 		jobTable=$('#jobTable').dataTable(dateTable_option);
-		$('#cpyTable').dataTable({paging:true});
+		cmpTable=$('#cpyTable').dataTable({paging:true});
 		$('#dateBefore').datepicker();
 		$('#dateAfter').datepicker();
 		$('#companySearchBtn').on("click",function(){
@@ -37,6 +45,14 @@
 		$( "#AgentBtn" ).click(function( event ) {
 			  event.preventDefault();
 			  filterAgentJob();
+		});
+		$( "#filterByDateBtn" ).click(function( event ) {
+			  event.preventDefault();
+			  filterByDate();
+		});
+		$( "#hateBtn" ).click(function( event ) {
+			  event.preventDefault();
+			  filterHateJob();
 		});
 		/* $('#AgentBtn').on("click",function(){
 			this.preventDefault();filterAgentJob();}); */
@@ -48,32 +64,42 @@
 <script type="text/javascript" src="resources/js/jobTable.js"></script>
 </head>
 <body>
+<div class="container">
 <div id="head"><jsp:include page="menu.jsp"></jsp:include></div>
-<form action="${pageContext.request.contextPath}/service/filterByDate" method="post" >
-	<input type="text" name="dateAfter" id="dateAfter"/> <input type="text" name="dateBefore" id="dateBefore"/>
-	<input type="submit" value="filter" />
-</form>
+<div class="form-group">
+	<form action="${pageContext.request.contextPath}/service/filterByDateJSON" method="post" >
+		<label>Date range:</label>
+		<input type="text" name="dateAfter" id="dateAfter" class="form-control"/> <input type="text" name="dateBefore" id="dateBefore" class="form-control"/>
+		<input id="filterByDateBtn" type="submit" value="filter" />
+	</form>
+</div>
 <div>
-<input type="text" id="companyName"/>
-	<input type="button" value="filter" id="companySearchBtn"/>
+	<label>Specific Company:</label><br/>
+	<input type="text" id="companyName" /><input type="button" value="filter" id="companySearchBtn" class="input-sm"/>
 	</div>
-<form action="${pageContext.request.contextPath}/service/filterAgent" method="post">
-	<input type="checkbox" name="true_False" id="true_False" class="checkBoxes" value="true">Filter agent</input>
-	<input type="checkbox" name="PCCW" id="PCCW" class="checkBoxes" value="true">Filter PCCW</input>
-	<input id="AgentBtn" type="submit"value="Submit"/>
-</form>
-<form method="post" action="${pageContext.request.contextPath}/service/filterBySkill">
+<div class="form-group" style="margin-top:20px">
+	<form action="${pageContext.request.contextPath}/service/filterAgent" method="post">
+		<input type="checkbox" name="true_False" id="true_False" class="checkBoxes form_control" value="true">Filter agent</input>
+		<input type="checkbox" name="PCCW" id="PCCW" class="checkBoxes form_control" value="true">Filter Agent</input>
+		<input id="AgentBtn" type="submit" value="Submit"/>
+	</form>
+</div>
+<%-- <form action="" method="post">
+	<input type="checkbox" name="filterHate" id="filterHate" class="checkBoxes" value="true">Filter Hated</input>
+	<input id="hateBtn" type="submit"value="Submit"/>
+</form> --%>
+<%-- <form method="post" action="${pageContext.request.contextPath}/service/filterBySkill">
 	<span name="skills" class="select">
 	<c:forEach var="skill" items="${skillList}">
 		<input type="checkbox" name="skill" class="checkBoxes" value="${skill}">${skill}</input>
 	</c:forEach>
 	<input type="submit"value="Submit"/>
 	</span>
-</form>
+</form> --%>
 		<table id="jobTable" class="display" cellspacing="0">
 			<thead>
 				<tr><th class="smallCell">save</th> 
-					<th class="smallCell">hate</th>
+					<!-- <th class="smallCell">hate</th> -->
 					<th>Title</th>
 					<th>Company</th>
 					<th class="smallCell"></th>
@@ -91,12 +117,12 @@
 					<c:if test="${job.saved==false}">
 					<span class="ui-icon ui-icon-plus" onclick="saveJob('${job.jobId}',$(this));"/>
 					</c:if></td>
-					<td><c:if test="${job.hated==true}">
+					<%-- <td><c:if test="${job.hated==true}">
 					<span class="ui-icon ui-icon-star" onclick="deleteHateJob('${job.jobId}',$(this));"/>
 					</c:if>
 					<c:if test="${job.hated==false}">
 					<span class="ui-icon ui-icon-plus" onclick="hateJob('${job.jobId}',$(this));"/>
-					</c:if></td>
+					</c:if></td> --%>
 					<td><div onclick="$('#content-${count}').dialog({width:'80%',closeOnEscape:true}).show()">
 					<span style="${job.saved==true?'color:red;':''}${job.hated==true?'color:blue;':''}">${job.jobTtile}</span>
 					</div></td>
@@ -151,5 +177,7 @@
 			</c:forEach>
 			</tbody>
 		</table>
+		<div id="jobContentDialog" style="display:none"></div>
+</div>
 </body>
 </html>

@@ -19,7 +19,7 @@ public class JobListAnalyser {
 		
 		if(jobTimeStamp != null) {
 			Calendar current = Calendar.getInstance();
-			current.add(Calendar.MINUTE, -10);
+			current.add(Calendar.MINUTE, -60);
 			if(current.before(jobTimeStamp)&&companyCount!=null) {
 				return companyCount;
 			}
